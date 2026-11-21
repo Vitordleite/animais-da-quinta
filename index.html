@@ -508,7 +508,38 @@ const byId = {}; ANIMALS.forEach(a=>{ byId[a.id]=a; });
 let speakId = 0;
 /* Diz o texto e, SÓ QUANDO TERMINA, chama 'then' (ex.: tocar o som do animal).
    Se a voz não existir ou falhar, 'then' é chamado na mesma, após um curto tempo. */
-function speak(text, then){
+/* Vozes portuguesas do aparelho, da melhor para a pior (pt-PT primeiro; "melhorada/premium/natural" à frente) */
+function ptVoices(){
+  let all = [];
+  try{ all = speechSynthesis.getVoices() || []; }catch(e){}
+  const seen = {}, out = [];
+  all.forEach(v=>{
+    if(!/^pt/i.test(v.lang) || seen[v.name]) return;
+    seen[v.name] = 1;
+    let sc = /pt[-_]PT/i.test(v.lang) ? 100 : 20;
+    if(/premium|enhanced|melhorad|natural|neural|online/i.test(v.name)) sc += 30;
+    if(/joana|catarina|helia|duarte|raquel|fernanda/i.test(v.name)) sc += 10;
+    if(/compact/i.test(v.name)) sc -= 10;
+    out.push({v:v, sc:sc});
+  });
+  out.sort((x,y)=>y.sc-x.sc);
+  return out.map(x=>x.v);
+}
+function pickVoice(){
+  const list = ptVoices();
+  let saved = ""; try{ saved = localStorage.getItem("animais_voice")||""; }catch(e){}
+  for(let i=0;i<list.length;i++) if(list[i].name===saved) return list[i];
+  return list[0] || null;
+}
+function voiceLabel(){
+  const v = pickVoice(); if(!v) return "do aparelho";
+  return v.name.replace(/\s+-\s+.*$/,"").replace(/^(Microsoft|Google)\s+/i,"").trim();
+}
+/* Diz o texto e, SÓ QUANDO TERMINA, chama 'then' (ex.: tocar o som do animal).
+   Se a voz não existir ou falhar, 'then' é chamado na mesma, após um curto tempo.
+   o = {rate, pitch} opcional. */
+function speak(text, then, o){
+  o = o || {};
   const id = ++speakId;
   let done = false;
   const fin = ()=>{ if(done) return; done = true; if(then && id===speakId) then(); };
@@ -516,17 +547,28 @@ function speak(text, then){
     if(!("speechSynthesis" in window)){ setTimeout(fin,300); return; }
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = "pt-PT"; u.rate = .85; u.pitch = 1.25;
-    const v = speechSynthesis.getVoices().find(v=>/pt[-_]PT/i.test(v.lang)) ||
-              speechSynthesis.getVoices().find(v=>/^pt/i.test(v.lang));
-    if(v) u.voice = v;
+    u.lang = "pt-PT"; u.rate = o.rate || .88; u.pitch = o.pitch || 1.1;
+    const v = pickVoice(); if(v){ u.voice = v; u.lang = v.lang; }
     u.onend = ()=>setTimeout(fin,150);
     u.onerror = ()=>fin();
     speechSynthesis.speak(u);
-    setTimeout(fin, 4000);          // segurança (alguns aparelhos não avisam quando acaba)
+    setTimeout(fin, 3000 + text.length*110);   // segurança (alguns aparelhos não avisam quando acaba)
   }catch(e){ setTimeout(fin,300); }
 }
-if("speechSynthesis" in window) speechSynthesis.onvoiceschanged = ()=>{};
+/* Leitura de histórias: frases separadas, pausas, e as falas (entre travessões) com voz um pouco mais viva */
+let narrTok = 0;
+function narrate(raw){
+  const tok = ++narrTok;
+  const txt = raw.replace(/Ssshhh/g,"Chiu").replace(/Splash, splash/g,"Chape, chape");
+  const segs = [];
+  txt.split(/\s*—\s*/).forEach((t,i)=>{ t = t.trim(); if(t) segs.push({t:t, d:i%2===1}); });
+  (function next(k){
+    if(tok!==narrTok || k>=segs.length) return;
+    const sg = segs[k];
+    speak(sg.t, ()=>setTimeout(()=>next(k+1), sg.d?200:380), sg.d ? {pitch:1.22,rate:.92} : {pitch:1.0,rate:.84});
+  })(0);
+}
+if("speechSynthesis" in window) speechSynthesis.onvoiceschanged = ()=>{ if(typeof refreshVoiceBtn==="function") refreshVoiceBtn(); };
 
 /* ───────────────────────── UI ───────────────────────── */
 const grid = document.getElementById("grid");
@@ -934,9 +976,15 @@ function mode6(){
 const navEl = document.querySelector("nav");
 let section = "menu";
 function leaveSection(){                 // pára tudo o que estava a decorrer (temporizadores dos jogos, voz)
-  mode = 0; countRun++;
+  mode = 0; countRun++; narrTok++;
   try{ speechSynthesis.cancel(); }catch(e){}
   speakId++;
+}
+function refreshVoiceBtn(){
+  const b = document.getElementById("bvoice"); if(!b) return;
+  const n = ptVoices().length;
+  b.style.display = n>1 ? "" : "none";            // só aparece se houver mais do que uma voz portuguesa
+  b.textContent = "🗣️ Voz: "+voiceLabel()+" (mudar)";
 }
 function showMenu(say){
   leaveSection(); section = "menu"; navEl.style.display = "none";
@@ -944,6 +992,15 @@ function showMenu(say){
   prompt_.textContent = "O que queres fazer?";
   grid.innerHTML = '<button class="bigbtn" id="bgames" style="background:var(--a)"><span class="bi">🎮</span>Jogos</button>'+
                    '<button class="bigbtn" id="bstories" style="background:var(--d)"><span class="bi">📖</span>Histórias</button>';
+  const vb = document.createElement("button"); vb.className = "btn"; vb.id = "bvoice"; vb.style.cssText = "width:100%;max-width:300px;background:#8a7fb0;color:#fff";
+  grid.appendChild(vb); refreshVoiceBtn();
+  vb.onclick = ()=>{
+    initAudio(); const list = ptVoices(); if(!list.length) return;
+    const cur = pickVoice(); let i = 0; for(let k=0;k<list.length;k++) if(list[k]===cur) i = k;
+    const nx = list[(i+1)%list.length];
+    try{ localStorage.setItem("animais_voice", nx.name); }catch(e){}
+    refreshVoiceBtn(); speak("Olá! Eu sou a "+voiceLabel().split(" ")[0]+". Gosto de contar histórias!");
+  };
   document.getElementById("bgames").onclick = ()=>{ initAudio(); showGames(); };
   document.getElementById("bstories").onclick = ()=>{ initAudio(); showStories(); };
   if(say) speak(say);
@@ -995,17 +1052,17 @@ function openStory(si,pg){
     '<div class="sctl"><button class="btn" id="sp"'+(pg===0?' disabled':'')+'>◀</button>'+
     '<button class="btn" id="sl">🔊 Ouvir</button>'+
     '<button class="btn" id="sn">'+(last?'🔁 Ler outra vez':'Seguinte ▶')+'</button></div>';
-  const spoken = P.t.replace(/—\s*/g,"");
   Array.prototype.forEach.call(grid.querySelectorAll(".sit"), e=>e.onclick = ()=>{
     initAudio(); bounce(e);
     voice({type:"sine",f:[[0,450+Math.random()*250],[.12,900]],dur:.16,vol:.25});
   });
   document.getElementById("hm").onclick = ()=>{ initAudio(); showMenu("O que queres fazer?"); };
-  document.getElementById("sl").onclick = ()=>{ initAudio(); speak(spoken); };
+  document.getElementById("sl").onclick = ()=>{ initAudio(); narrate(P.t); };
   document.getElementById("sp").onclick = ()=>{ initAudio(); if(pg>0) openStory(si,pg-1); };
   document.getElementById("sn").onclick = ()=>{ initAudio(); openStory(si, last?0:pg+1); };
   if(last){ sfxWin(); confetti(); if(!st.done){ st.done = true; addStar(); } }
-  setTimeout(()=>speak(spoken),350);
+  const myTok = narrTok;
+  setTimeout(()=>{ if(narrTok===myTok && section==="stories") narrate(P.t); },350);
 }
 
 function answer(el,a,next){
