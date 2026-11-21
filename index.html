@@ -27,7 +27,7 @@
     box-shadow:0 5px 0 rgba(0,0,0,.18);transition:transform .08s;
   }
   nav button:active,.btn:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
-  #m1{background:var(--a)} #m2{background:var(--c)} #m3{background:var(--d)} #m4{background:#a867d8}
+  #m1{background:var(--a)} #m2{background:var(--c)} #m3{background:var(--d)} #m4{background:#a867d8} #m5{background:#1fa6b8}
 
   /* ── jogo "Encontra-nos!" (estilo Onde está o Wally) ── */
   main.scene-wrap{display:block;max-width:980px}
@@ -46,6 +46,26 @@
   .missring{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:4px solid rgba(255,255,255,.95);
             pointer-events:none;z-index:30;animation:missr .5s ease-out forwards}
   @keyframes missr{to{transform:scale(2.2);opacity:0}}
+
+  /* ── jogo "Conta até 10" ── */
+  main.count-wrap{display:block;max-width:760px}
+  .cbox{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;background:#fff;border-radius:26px;border:5px solid #fff;
+        box-shadow:0 7px 0 rgba(0,0,0,.12);padding:14px 10px;margin:0 auto 14px;min-height:120px}
+  .cit{position:relative;width:76px;height:76px;margin:5px;line-height:76px;font-size:54px;text-align:center;cursor:pointer;
+       -webkit-user-select:none;user-select:none;transition:transform .15s}
+  .cit .bd{position:absolute;right:-2px;bottom:-2px;min-width:30px;height:30px;line-height:30px;border-radius:15px;background:var(--d);color:#fff;
+           font-size:18px;font-weight:bold;box-shadow:0 2px 0 rgba(0,0,0,.2);display:none}
+  .cit.on{transform:scale(1.18)} .cit.on .bd{display:block}
+  .cit.pop{animation:bounce .6s}
+  .choices{display:flex;flex-wrap:wrap;justify-content:center}
+  .num{font:inherit;font-size:44px;font-weight:bold;width:92px;height:92px;margin:7px;border:none;border-radius:50%;color:#fff;cursor:pointer;
+       box-shadow:0 6px 0 rgba(0,0,0,.2);transition:transform .1s}
+  .num:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.2)}
+  .num.good{outline:6px solid #fff;animation:bounce .7s}
+  .plate{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;min-height:110px;margin:0 auto 14px;border-radius:26px;
+         border:5px dashed var(--d);background:rgba(255,255,255,.6);padding:10px}
+  .plate .cit{cursor:default}
+  .big{font-size:56px;font-weight:bold;color:var(--d);margin:0 8px;vertical-align:middle}
   nav button.on{outline:5px solid #fff;outline-offset:2px}
   .prompt{text-align:center;font-size:26px;font-size:clamp(20px,4.5vw,32px);margin:8px 10px;min-height:46px}
   .prompt .btn{background:var(--b);color:var(--ink);margin-left:8px;padding:8px 18px}
@@ -179,6 +199,7 @@
   <button id="m2">👂 Que animal é?</button>
   <button id="m3">🔎 Onde está?</button>
   <button id="m4">🕵️ Encontra-nos!</button>
+  <button id="m5">🔢 Conta até 10</button>
 </nav>
 
 <div class="prompt" id="prompt"></div>
@@ -738,6 +759,92 @@ window.addEventListener("resize", ()=>{                    // só volta a desenh
   },300);
 });
 
+
+/* ───────────────────────── JOGO 5: CONTA ATÉ 10 ───────────────────────── */
+const NUMW = ["zero","um","dois","três","quatro","cinco","seis","sete","oito","nove","dez"];
+const NUMC = ["#ff7a59","#4cc38a","#5b8def","#a867d8","#1fa6b8","#e8590c","#d6336c","#37b24d","#f59f00","#7048e8"];
+const COUNT_THINGS = ["🍎","🍓","🐥","🐞","⭐","🎈","🐟","🌸","🐮","🍌","🦋","🐝"];
+let countStep = 0, countRun = 0;
+
+function mode5(){
+  const run = ++countRun;                       // cancela contagens automáticas anteriores
+  const max = Math.min(10, 3 + Math.floor(countStep/2));   // começa em 3 e sobe até 10
+  const kind = countStep%2===0 ? "count" : "give";
+  const N = 1 + Math.floor(Math.random()*max);
+  const thing = COUNT_THINGS[Math.floor(Math.random()*COUNT_THINGS.length)];
+  let done = false;
+  grid.className = "count-wrap"; grid.innerHTML = "";
+
+  const finish = (txt)=>{
+    done = true; sfxWin(); confetti(); addStar();
+    speak("Muito bem! "+txt);
+    setTimeout(()=>{ if(mode===5 && run===countRun){ countStep++; mode5(); } }, 4200);
+  };
+  const mk = (cls)=>{ const e = document.createElement("div"); e.className = cls; return e; };
+  const item = ()=>{ const e = mk("cit"); e.innerHTML = thing+'<span class="bd"></span>'; return e; };
+
+  if(kind==="count"){
+    const ask = "Quantos são? Toca em cada um para contar.";
+    prompt_.innerHTML = `Quantos são? <button class="btn" id="again">🔊</button> <button class="btn" id="auto">👆 Conta comigo</button>`;
+    const box = mk("cbox"); grid.appendChild(box);
+    const its = [];
+    let counted = 0;
+    const mark = (e,k)=>{ e.classList.add("on"); e.querySelector(".bd").textContent = k; bounce(e); };
+    for(let i=0;i<N;i++){
+      const e = item(); e.onclick = ()=>{
+        if(done) return; initAudio();
+        if(e.classList.contains("on")) return;
+        counted++; mark(e,counted); speak(NUMW[counted]);
+      };
+      box.appendChild(e); its.push(e);
+    }
+    const ch = mk("choices"); grid.appendChild(ch);
+    const opts = [N]; 
+    while(opts.length<3){ const v = 1+Math.floor(Math.random()*Math.max(4,max)); if(opts.indexOf(v)<0) opts.push(v); }
+    shuffle(opts).forEach(v=>{
+      const b = document.createElement("button"); b.className = "num"; b.textContent = v; b.style.background = NUMC[(v-1)%10];
+      b.onclick = ()=>{
+        if(done) return; initAudio();
+        if(v===N){ b.classList.add("good"); finish("São "+NUMW[N]+"!"); }
+        else{ shake(b); sfxOops(); speak("Tenta outra vez! Conta com calma."); }
+      };
+      ch.appendChild(b);
+    });
+    document.getElementById("again").onclick = ()=>{ initAudio(); speak(ask); };
+    document.getElementById("auto").onclick = ()=>{
+      initAudio(); if(done) return;
+      its.forEach(e=>{ e.classList.remove("on"); }); counted = 0;
+      const step = ()=>{
+        if(done || run!==countRun || counted>=N) return;
+        const e = its[counted]; counted++; mark(e,counted);
+        speak(NUMW[counted], step);
+      };
+      step();
+    };
+    setTimeout(()=>{ if(run===countRun) speak(ask); },350);
+  }else{
+    const ask = "Põe "+NUMW[N]+" no prato!";
+    prompt_.innerHTML = `Põe <span class="big">${N}</span> no prato! <button class="btn" id="again">🔊</button>`;
+    const src = mk("cbox"); grid.appendChild(src);
+    const plate = mk("plate"); grid.appendChild(plate);
+    let put = 0;
+    const total = Math.min(12, N+2+Math.floor(Math.random()*3));
+    for(let i=0;i<total;i++){
+      const e = item();
+      e.onclick = ()=>{
+        if(done) return; initAudio();
+        if(e.parentNode!==src) return;
+        if(put>=N){ bounce(e); speak("Já chegam! Tens "+NUMW[N]+"."); return; }
+        put++; src.removeChild(e); e.classList.add("on"); e.querySelector(".bd").textContent = put; plate.appendChild(e);
+        if(put===N) finish(NUMW[N]+"!"); else speak(NUMW[put]);
+      };
+      src.appendChild(e);
+    }
+    document.getElementById("again").onclick = ()=>{ initAudio(); speak(ask); };
+    setTimeout(()=>{ if(run===countRun) speak(ask); },350);
+  }
+}
+
 function answer(el,a,next){
   if(locked) return;
   initAudio();
@@ -757,10 +864,10 @@ function answer(el,a,next){
 
 function setMode(m){
   mode = m;
-  ["m1","m2","m3","m4"].forEach((id,i)=>document.getElementById(id).classList.toggle("on",i+1===m));
-  ({1:mode1,2:mode2,3:mode3,4:mode4})[m]();
+  ["m1","m2","m3","m4","m5"].forEach((id,i)=>document.getElementById(id).classList.toggle("on",i+1===m));
+  ({1:mode1,2:mode2,3:mode3,4:mode4,5:mode5})[m]();
 }
-["m1","m2","m3","m4"].forEach((id,i)=>document.getElementById(id).onclick = ()=>{ initAudio(); setMode(i+1); });
+["m1","m2","m3","m4","m5"].forEach((id,i)=>document.getElementById(id).onclick = ()=>{ initAudio(); setMode(i+1); });
 
 /* Escolher quem joga: mostra a foto em cima com "Olá! Eu sou a ..." e a voz diz o mesmo */
 function choosePlayer(id){
@@ -772,7 +879,7 @@ function choosePlayer(id){
   document.getElementById("pName").textContent = "Eu sou a "+p.nome+"!";
   const btn = document.getElementById("player");
   btn.classList.remove("hi"); void btn.offsetWidth; btn.classList.add("hi");
-  loadStars(); drawStars(); huntStep = 0;
+  loadStars(); drawStars(); huntStep = 0; countStep = 0;
   sfxWin(); confetti();
   setMode(1);
   speak("Olá! Eu sou a "+p.nome+"! Vamos brincar com os animais!");
