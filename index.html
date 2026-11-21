@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Os Animais da Quinta 🐮</title>
+<style>
+  :root{
+    --bg1:#bfe9ff; --bg2:#e9fbd3; --card:#ffffff; --ink:#3a2f5b;
+    --a:#ff7a59; --b:#ffc83d; --c:#4cc38a; --d:#5b8def;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:"Comic Sans MS","Chalkboard SE","Trebuchet MS",system-ui,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 100%);
+    min-height:100vh; overflow-x:hidden;
+  }
+  header{text-align:center;padding:14px 10px 4px}
+  h1{margin:0;font-size:clamp(26px,6vw,46px);letter-spacing:1px}
+  .stars{font-size:clamp(20px,4vw,28px);min-height:34px}
+  nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:8px 10px}
+  nav button, .btn{
+    font:inherit;font-size:clamp(16px,3.6vw,22px);font-weight:bold;
+    border:none;border-radius:999px;padding:12px 22px;cursor:pointer;color:#fff;
+    box-shadow:0 5px 0 rgba(0,0,0,.18);transition:transform .08s;
+  }
+  nav button:active,.btn:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+  #m1{background:var(--a)} #m2{background:var(--c)} #m3{background:var(--d)}
+  nav button.on{outline:5px solid #fff;outline-offset:2px}
+  .prompt{text-align:center;font-size:clamp(20px,4.5vw,32px);margin:8px 10px;min-height:46px}
+  .prompt .btn{background:var(--b);color:var(--ink);margin-left:8px;padding:8px 18px}
+  main{
+    display:grid;gap:14px;padding:10px 14px 30px;max-width:980px;margin:0 auto;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  }
+  main.few{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));max-width:760px}
+  .card{
+    background:var(--card);border-radius:28px;padding:10px 6px 12px;text-align:center;cursor:pointer;
+    box-shadow:0 7px 0 rgba(0,0,0,.12);border:5px solid transparent;
+    transition:transform .1s;
+  }
+  .card:active{transform:scale(.94)}
+  .card .e{font-size:clamp(58px,15vw,96px);line-height:1.1;display:block}
+  .card .n{font-size:clamp(16px,3.6vw,22px);font-weight:bold}
+  .card.hide-name .n{visibility:hidden}
+  .bounce{animation:bounce .7s}
+  @keyframes bounce{
+    0%{transform:scale(1)} 20%{transform:scale(1.18) rotate(-6deg)}
+    40%{transform:scale(.95) rotate(5deg)} 60%{transform:scale(1.12) rotate(-4deg)}
+    80%{transform:scale(1) rotate(2deg)} 100%{transform:scale(1)}
+  }
+  .shake{animation:shake .45s}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-7px)}80%{transform:translateX(7px)}}
+  .good{border-color:var(--c)}
+  .conf{position:fixed;top:-20px;font-size:28px;pointer-events:none;z-index:9;animation:fall 1.8s linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:.8}}
+  footer{text-align:center;font-size:13px;opacity:.6;padding:0 0 18px}
+  #start{
+    position:fixed;inset:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));z-index:20;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:20px;
+  }
+  #start .big{font-size:clamp(80px,22vw,150px);animation:bounce 1.6s infinite}
+  #start .btn{background:var(--a);font-size:clamp(24px,6vw,40px);padding:18px 40px}
+</style>
+</head>
+<body>
+
+<div id="start">
+  <div class="big">🐮🐶🐱</div>
+  <h1>Os Animais da Quinta</h1>
+  <button class="btn" id="go">▶ Jogar!</button>
+</div>
+
+<header>
+  <h1>🐮 Os Animais da Quinta 🐷</h1>
+  <div class="stars" id="stars"></div>
+</header>
+
+<nav>
+  <button id="m1" class="on">👆 Toca e ouve</button>
+  <button id="m2">👂 Que animal é?</button>
+  <button id="m3">🔎 Onde está?</button>
+</nav>
+
+<div class="prompt" id="prompt"></div>
+<main id="grid"></main>
+<footer>Feito com ❤️ para a família</footer>
+
+<script>
+"use strict";
+
+/* ───────────────────────── ÁUDIO (tudo sintetizado, sem ficheiros) ───────────────────────── */
+let AC = null, master = null;
+function initAudio(){
+  if(AC) { if(AC.state==="suspended") AC.resume(); return; }
+  AC = new (window.AudioContext||window.webkitAudioContext)();
+  master = AC.createGain(); master.gain.value = 0.8;
+  const comp = AC.createDynamicsCompressor();
+  master.connect(comp); comp.connect(AC.destination);
+}
+
+/* oscilador com envolvente de frequência [[t,hz],...], filtro e vibrato */
+function voice({type="sawtooth",f,dur,at=0,vol=.3,filt=null,vib=null,trem=null,att=.02,rel=.08}){
+  const t0 = AC.currentTime + at;
+  const o = AC.createOscillator(); o.type = type;
+  o.frequency.setValueAtTime(f[0][1], t0+f[0][0]);
+  for(let i=1;i<f.length;i++) o.frequency.linearRampToValueAtTime(f[i][1], t0+f[i][0]);
+  const g = AC.createGain();
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.linearRampToValueAtTime(vol,t0+att);
+  g.gain.setValueAtTime(vol,t0+Math.max(att,dur-rel));
+  g.gain.linearRampToValueAtTime(0.0001,t0+dur);
+  let node = o;
+  if(filt){
+    const bq = AC.createBiquadFilter(); bq.type = filt.type||"bandpass";
+    bq.frequency.setValueAtTime(filt.f[0][1],t0);
+    for(let i=1;i<filt.f.length;i++) bq.frequency.linearRampToValueAtTime(filt.f[i][1],t0+filt.f[i][0]);
+    bq.Q.value = filt.q||2;
+    node.connect(bq); node = bq;
+  }
+  node.connect(g); g.connect(master);
+  if(vib){ // vibrato na frequência
+    const l = AC.createOscillator(), lg = AC.createGain();
+    l.frequency.value = vib.rate; lg.gain.value = vib.depth;
+    l.connect(lg); lg.connect(o.frequency); l.start(t0); l.stop(t0+dur+.1);
+  }
+  if(trem){ // tremolo no volume
+    const l = AC.createOscillator(), lg = AC.createGain();
+    l.frequency.value = trem.rate; lg.gain.value = vol*trem.depth;
+    l.connect(lg); lg.connect(g.gain); l.start(t0); l.stop(t0+dur+.1);
+  }
+  o.start(t0); o.stop(t0+dur+.1);
+}
+
+let noiseBuf = null;
+function noise({dur,at=0,vol=.2,filt={type:"bandpass",f:[[0,1000]],q:1},att=.01,rel=.05}){
+  if(!noiseBuf){
+    noiseBuf = AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  }
+  const t0 = AC.currentTime+at;
+  const s = AC.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+  const bq = AC.createBiquadFilter(); bq.type = filt.type; bq.Q.value = filt.q||1;
+  bq.frequency.setValueAtTime(filt.f[0][1],t0);
+  for(let i=1;i<filt.f.length;i++) bq.frequency.linearRampToValueAtTime(filt.f[i][1],t0+filt.f[i][0]);
+  const g = AC.createGain();
+  g.gain.setValueAtTime(.0001,t0);
+  g.gain.linearRampToValueAtTime(vol,t0+att);
+  g.gain.setValueAtTime(vol,t0+Math.max(att,dur-rel));
+  g.gain.linearRampToValueAtTime(.0001,t0+dur);
+  s.connect(bq); bq.connect(g); g.connect(master);
+  s.start(t0); s.stop(t0+dur+.1);
+}
+
+/* Cada animal: aproximação sintetizada do som real */
+const SOUNDS = {
+  vaca(){ // MUUU
+    voice({f:[[0,110],[.5,150],[1.4,120],[1.7,95]],dur:1.8,vol:.5,
+      filt:{type:"lowpass",f:[[0,500],[.6,1100],[1.7,400]],q:3},vib:{rate:5,depth:4}});
+    voice({type:"square",f:[[0,110],[.5,150],[1.4,120],[1.7,95]],dur:1.8,vol:.12,
+      filt:{type:"lowpass",f:[[0,400],[1.7,300]],q:1}});
+  },
+  cao(){ // AU AU
+    [0,.38].forEach(a=>{
+      voice({f:[[0,520],[.06,380],[.2,230]],dur:.22,at:a,vol:.5,
+        filt:{type:"bandpass",f:[[0,1100],[.2,700]],q:2.5}});
+      noise({dur:.14,at:a,vol:.25,filt:{type:"bandpass",f:[[0,1500]],q:1.2}});
+    });
+  },
+  gato(){ // MIAU
+    voice({f:[[0,420],[.18,760],[.55,640],[.9,380]],dur:.95,vol:.4,
+      filt:{type:"bandpass",f:[[0,900],[.2,2200],[.55,1500],[.9,800]],q:4},vib:{rate:6,depth:10}});
+  },
+  ovelha(){ // BÉÉÉ
+    voice({f:[[0,330],[.2,360],[.9,300]],dur:1.0,vol:.45,
+      filt:{type:"bandpass",f:[[0,1200],[.9,1000]],q:3},trem:{rate:28,depth:.6},vib:{rate:9,depth:12}});
+  },
+  porco(){ // ÓINC ÓINC
+    [0,.5].forEach(a=>{
+      voice({f:[[0,170],[.08,260],[.22,150],[.3,120]],dur:.34,at:a,vol:.5,
+        filt:{type:"bandpass",f:[[0,500],[.1,1000],[.3,600]],q:2.5},trem:{rate:35,depth:.5}});
+      noise({dur:.28,at:a,vol:.22,filt:{type:"bandpass",f:[[0,700]],q:2}});
+    });
+  },
+  galo(){ // CÓ-CÓ-RI-CÓÓÓ
+    voice({f:[[0,520],[.2,700]],dur:.22,at:0,vol:.35,filt:{type:"bandpass",f:[[0,1600]],q:3}});
+    voice({f:[[0,700],[.2,880]],dur:.22,at:.25,vol:.35,filt:{type:"bandpass",f:[[0,1800]],q:3}});
+    voice({f:[[0,880],[.15,950]],dur:.16,at:.52,vol:.35,filt:{type:"bandpass",f:[[0,2000]],q:3}});
+    voice({f:[[0,800],[.25,1050],[.9,750],[1.1,600]],dur:1.15,at:.72,vol:.4,
+      filt:{type:"bandpass",f:[[0,1800],[.3,2300],[1.1,1500]],q:3},vib:{rate:7,depth:14}});
+  },
+  pato(){ // QUAC QUAC
+    [0,.34].forEach(a=>{
+      voice({f:[[0,520],[.06,430],[.2,320]],dur:.24,at:a,vol:.45,
+        filt:{type:"bandpass",f:[[0,1300],[.2,900]],q:4},trem:{rate:60,depth:.4}});
+      noise({dur:.2,at:a,vol:.15,filt:{type:"bandpass",f:[[0,1800]],q:2}});
+    });
+  },
+  cavalo(){ // IIIHÓ
+    voice({f:[[0,550],[.2,1100],[.7,900],[1.2,500],[1.5,300]],dur:1.6,vol:.4,
+      filt:{type:"bandpass",f:[[0,1500],[.3,2400],[1.5,900]],q:2.5},vib:{rate:12,depth:25}});
+    noise({dur:1.2,vol:.1,filt:{type:"bandpass",f:[[0,2500],[1.2,1200]],q:1.5}});
+  },
+  leao(){ // ROOOAR
+    noise({dur:1.8,vol:.5,att:.15,rel:.5,filt:{type:"lowpass",f:[[0,700],[.5,1400],[1.8,350]],q:1.5}});
+    voice({f:[[0,95],[.4,130],[1.6,70]],dur:1.8,vol:.45,att:.1,rel:.5,
+      filt:{type:"lowpass",f:[[0,500],[.5,900],[1.8,250]],q:2},trem:{rate:22,depth:.7}});
+  },
+  elefante(){ // TRROMBETA
+    voice({f:[[0,300],[.15,520],[.8,680],[1.2,480]],dur:1.3,vol:.4,att:.04,
+      filt:{type:"bandpass",f:[[0,1000],[.8,2000]],q:2},vib:{rate:14,depth:30}});
+    noise({dur:1.2,vol:.18,filt:{type:"bandpass",f:[[0,1800]],q:1}});
+  },
+  macaco(){ // UH-UH-AH-AH
+    for(let i=0;i<5;i++){
+      voice({type:"triangle",f:[[0,i%2?420:560],[.12,i%2?560:380]],dur:.15,at:i*.19,vol:.45,
+        filt:{type:"bandpass",f:[[0,1400]],q:3},vib:{rate:20,depth:20}});
+    }
+  },
+  ra(){ // CROÁ
+    for(let i=0;i<2;i++){
+      for(let k=0;k<6;k++){
+        voice({type:"square",f:[[0,k%2?190:230]],dur:.045,at:i*.55+k*.055,vol:.35,
+          filt:{type:"bandpass",f:[[0,700]],q:5},att:.005,rel:.02});
+      }
+    }
+  },
+  passaro(){ // PIU-PIU
+    [0,.22,.55,.77,.99].forEach((a,i)=>{
+      voice({type:"sine",f:[[0,2400+i*60],[.08,3300],[.16,2700]],dur:.17,at:a,vol:.32,vib:{rate:30,depth:60}});
+    });
+  },
+  burro(){ // I-Á I-Á
+    voice({f:[[0,420],[.25,820],[.45,700]],dur:.5,vol:.4,
+      filt:{type:"bandpass",f:[[0,1300],[.3,2000]],q:3},vib:{rate:8,depth:15}});
+    voice({f:[[0,380],[.2,300],[.6,210]],dur:.7,at:.5,vol:.45,
+      filt:{type:"bandpass",f:[[0,900],[.7,600]],q:3},trem:{rate:14,depth:.5}});
+  },
+  coelho(){ // sons suaves de roer (cenoura!)
+    for(let i=0;i<6;i++) noise({dur:.05,at:i*.09,vol:.4,att:.002,rel:.03,filt:{type:"bandpass",f:[[0,3200]],q:3}});
+  },
+  peru(){ // GLU-GLU-GLU
+    for(let i=0;i<8;i++){
+      voice({f:[[0,520],[.05,420]],dur:.07,at:i*.075,vol:.45,
+        filt:{type:"bandpass",f:[[0,1100]],q:4},trem:{rate:60,depth:.4}});
+    }
+  },
+};
+
+/* sons de feedback */
+function sfxWin(){
+  [523,659,784,1047].forEach((hz,i)=>voice({type:"triangle",f:[[0,hz]],dur:.22,at:i*.1,vol:.28,rel:.1}));
+}
+function sfxOops(){
+  voice({type:"sine",f:[[0,300],[.25,200]],dur:.28,vol:.25});
+}
+
+/* ───────────────────────── DADOS ───────────────────────── */
+const ANIMALS = [
+  {id:"vaca",    e:"🐮", n:"A vaca",     say:"A vaca faz muuu",         s:"vaca"},
+  {id:"cao",     e:"🐶", n:"O cão",      say:"O cão faz au au",         s:"cao"},
+  {id:"gato",    e:"🐱", n:"O gato",     say:"O gato faz miau",         s:"gato"},
+  {id:"ovelha",  e:"🐑", n:"A ovelha",   say:"A ovelha faz béé",        s:"ovelha"},
+  {id:"porco",   e:"🐷", n:"O porco",    say:"O porco faz oinc oinc",   s:"porco"},
+  {id:"galo",    e:"🐓", n:"O galo",     say:"O galo faz cócórócó",     s:"galo"},
+  {id:"pato",    e:"🦆", n:"O pato",     say:"O pato faz quac quac",    s:"pato"},
+  {id:"cavalo",  e:"🐴", n:"O cavalo",   say:"O cavalo faz iihó",       s:"cavalo"},
+  {id:"burro",   e:"🫏", n:"O burro",    say:"O burro faz iá iá",       s:"burro"},
+  {id:"leao",    e:"🦁", n:"O leão",     say:"O leão faz roar",         s:"leao"},
+  {id:"elefante",e:"🐘", n:"O elefante", say:"O elefante faz trum",     s:"elefante"},
+  {id:"macaco",  e:"🐵", n:"O macaco",   say:"O macaco faz uh uh ah ah",s:"macaco"},
+  {id:"ra",      e:"🐸", n:"A rã",       say:"A rã faz croac",          s:"ra"},
+  {id:"passaro", e:"🐦", n:"O passarinho",say:"O passarinho faz piu piu",s:"passaro"},
+  {id:"peru",    e:"🦃", n:"O peru",     say:"O peru faz glu glu",      s:"peru"},
+  {id:"coelho",  e:"🐰", n:"O coelho",   say:"O coelho gosta de cenouras",s:"coelho"},
+];
+const byId = Object.fromEntries(ANIMALS.map(a=>[a.id,a]));
+
+/* ───────────────────────── FALA (pt-PT, se o dispositivo tiver voz) ───────────────────────── */
+function speak(text){
+  try{
+    if(!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "pt-PT"; u.rate = .85; u.pitch = 1.25;
+    const v = speechSynthesis.getVoices().find(v=>/pt[-_]PT/i.test(v.lang)) ||
+              speechSynthesis.getVoices().find(v=>/^pt/i.test(v.lang));
+    if(v) u.voice = v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if("speechSynthesis" in window) speechSynthesis.onvoiceschanged = ()=>{};
+
+/* ───────────────────────── UI ───────────────────────── */
+const grid = document.getElementById("grid");
+const prompt_ = document.getElementById("prompt");
+const starsEl = document.getElementById("stars");
+let mode = 1, stars = 0, target = null, locked = false;
+
+try{ stars = parseInt(localStorage.getItem("animais_stars")||"0",10)||0; }catch(e){}
+function drawStars(){
+  const shown = Math.min(stars,12);
+  starsEl.textContent = "⭐".repeat(shown) + (stars>12 ? " ×"+stars : "");
+}
+function addStar(){
+  stars++; drawStars();
+  try{ localStorage.setItem("animais_stars",String(stars)); }catch(e){}
+}
+
+const shuffle = a => a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(p=>p[1]);
+const pick = (n,exclude) => shuffle(ANIMALS.filter(a=>a!==exclude)).slice(0,n);
+
+function card(a,{hideName=false}={}){
+  const d = document.createElement("div");
+  d.className = "card"+(hideName?" hide-name":"");
+  d.innerHTML = `<span class="e">${a.e}</span><span class="n">${a.n}</span>`;
+  d.dataset.id = a.id;
+  return d;
+}
+function bounce(el){ el.classList.remove("bounce"); void el.offsetWidth; el.classList.add("bounce"); }
+function shake(el){ el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
+
+function confetti(){
+  const set = ["🎉","⭐","🌟","🎈","✨","🐾"];
+  for(let i=0;i<22;i++){
+    const c = document.createElement("div");
+    c.className = "conf"; c.textContent = set[i%set.length];
+    c.style.left = Math.random()*100+"vw";
+    c.style.animationDelay = Math.random()*.5+"s";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),2600);
+  }
+}
+
+/* Modo 1 – explorar */
+function mode1(){
+  prompt_.textContent = "Toca num animal para ouvir o que ele diz!";
+  grid.className = "";
+  grid.innerHTML = "";
+  ANIMALS.forEach(a=>{
+    const c = card(a);
+    c.onclick = ()=>{ initAudio(); bounce(c); SOUNDS[a.s](); speak(a.n.replace(/^(O|A) /,"")); };
+    grid.appendChild(c);
+  });
+}
+
+/* Modo 2 – ouvir e adivinhar */
+function mode2(){
+  grid.className = "few"; grid.innerHTML = ""; locked = false;
+  target = shuffle(ANIMALS)[0];
+  const opts = shuffle([target,...pick(2,target)]);
+  prompt_.innerHTML = `Que animal faz este som? <button class="btn" id="again">🔊 Ouvir</button>`;
+  document.getElementById("again").onclick = ()=>{ initAudio(); SOUNDS[target.s](); };
+  opts.forEach(a=>{
+    const c = card(a);
+    c.onclick = ()=>answer(c,a,()=>mode2());
+    grid.appendChild(c);
+  });
+  setTimeout(()=>{ initAudio(); SOUNDS[target.s](); },350);
+}
+
+/* Modo 3 – ouvir o nome e encontrar */
+function mode3(){
+  grid.className = "few"; grid.innerHTML = ""; locked = false;
+  target = shuffle(ANIMALS)[0];
+  const opts = shuffle([target,...pick(3,target)]);
+  prompt_.innerHTML = `Onde está ${target.n.toLowerCase()}? <button class="btn" id="again">🔊 Ouvir</button>`;
+  document.getElementById("again").onclick = ()=>speak("Onde está "+target.n.toLowerCase()+"?");
+  opts.forEach(a=>{
+    const c = card(a);
+    c.classList.add("hide-name"); // nome escondido: a criança identifica pela imagem
+    c.onclick = ()=>answer(c,a,()=>mode3());
+    grid.appendChild(c);
+  });
+  setTimeout(()=>speak("Onde está "+target.n.toLowerCase()+"?"),350);
+}
+
+function answer(el,a,next){
+  if(locked) return;
+  initAudio();
+  if(a===target){
+    locked = true;
+    el.classList.add("good"); el.classList.remove("hide-name"); bounce(el);
+    sfxWin(); setTimeout(()=>SOUNDS[a.s](),500);
+    confetti(); addStar();
+    speak("Muito bem!");
+    setTimeout(next,2600);
+  }else{
+    shake(el); sfxOops();
+    speak("Tenta outra vez!");
+  }
+}
+
+function setMode(m){
+  mode = m;
+  ["m1","m2","m3"].forEach((id,i)=>document.getElementById(id).classList.toggle("on",i+1===m));
+  ({1:mode1,2:mode2,3:mode3})[m]();
+}
+["m1","m2","m3"].forEach((id,i)=>document.getElementById(id).onclick = ()=>{ initAudio(); setMode(i+1); });
+
+document.getElementById("go").onclick = ()=>{
+  initAudio();
+  document.getElementById("start").remove();
+  sfxWin();
+  speak("Olá! Vamos brincar com os animais!");
+};
+
+drawStars();
+setMode(1);
+</script>
+</body>
+</html>
