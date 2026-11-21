@@ -75,6 +75,30 @@
   .cobj{background:#fff;border-radius:26px;border:5px solid #fff;box-shadow:0 7px 0 rgba(0,0,0,.12);text-align:center;margin:0 auto 14px;padding:10px;max-width:320px}
   .cobj .e2{font-size:96px;line-height:1.15}
   .cobj .n2{font-size:26px;font-weight:bold}
+
+  /* ── menu inicial e histórias ── */
+  main.menu-wrap{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;max-width:760px;padding-top:14px}
+  .bigbtn{font:inherit;font-size:30px;font-size:clamp(22px,6vw,36px);font-weight:bold;color:#fff;border:none;border-radius:34px;cursor:pointer;
+          width:300px;max-width:88%;padding:26px 14px;box-shadow:0 9px 0 rgba(0,0,0,.2);transition:transform .1s}
+  .bigbtn:active{transform:translateY(6px);box-shadow:0 2px 0 rgba(0,0,0,.2)}
+  .bigbtn .bi{display:block;font-size:84px;line-height:1.1;margin-bottom:6px}
+  .bigbtn.story{width:260px}
+  nav #mh{background:#8a7fb0}
+  main.story-wrap{display:block;max-width:760px}
+  .story{position:relative;border-radius:28px;border:5px solid #fff;box-shadow:0 7px 0 rgba(0,0,0,.12);padding:14px 10px 18px;text-align:center;overflow:hidden}
+  .story .chars{display:flex;justify-content:center;gap:14px;margin-bottom:6px}
+  .story .chars img{width:64px;height:64px;border-radius:50%;object-fit:cover;border:4px solid var(--b);background:#fff;box-shadow:0 3px 0 rgba(0,0,0,.2)}
+  .story .chars img.m{border-color:var(--a)}
+  .sit{display:inline-block;font-size:80px;font-size:clamp(56px,15vw,110px);line-height:1.15;margin:0 6px;cursor:pointer;
+       animation:sway 3s ease-in-out infinite;-webkit-user-select:none;user-select:none}
+  .sit:nth-child(2){animation-delay:.5s} .sit:nth-child(3){animation-delay:1s} .sit:nth-child(4){animation-delay:1.5s}
+  .sit.bounce{animation:bounce .7s}
+  @keyframes sway{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-9px) rotate(2deg)}}
+  .stext{background:rgba(255,255,255,.92);border-radius:22px;margin:12px 6px 0;padding:14px 16px;font-size:22px;font-size:clamp(19px,4.6vw,28px);line-height:1.45;text-align:left}
+  .sctl{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .sctl .btn{background:var(--d);color:#fff}
+  .sctl .btn[disabled]{opacity:.35;cursor:default}
+  .prompt .pg{font-size:18px;opacity:.7;margin-left:8px}
   nav button.on{outline:5px solid #fff;outline-offset:2px}
   .prompt{text-align:center;font-size:26px;font-size:clamp(20px,4.5vw,32px);margin:8px 10px;min-height:46px}
   .prompt .btn{background:var(--b);color:var(--ink);margin-left:8px;padding:8px 18px}
@@ -199,11 +223,12 @@
     <img id="pPhoto" alt="">
     <span class="bubble"><b id="pHi">Olá!</b> <span id="pName"></span></span>
   </button>
-  <div class="sub">Jogos das Pequenitas · Os Animais da Quinta</div>
+  <div class="sub">Jogos e Histórias das Pequenitas</div>
   <div class="stars" id="stars"></div>
 </header>
 
 <nav>
+  <button id="mh">🏠 Menu</button>
   <button id="m1" class="on">👆 Toca e ouve</button>
   <button id="m2">👂 Que animal é?</button>
   <button id="m3">🔎 Onde está?</button>
@@ -904,6 +929,85 @@ function mode6(){
   setTimeout(()=>{ if(mode===6 && !done) speak(ask); },350);
 }
 
+
+/* ───────────────────────── MENU, JOGOS E HISTÓRIAS ───────────────────────── */
+const navEl = document.querySelector("nav");
+let section = "menu";
+function leaveSection(){                 // pára tudo o que estava a decorrer (temporizadores dos jogos, voz)
+  mode = 0; countRun++;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  speakId++;
+}
+function showMenu(say){
+  leaveSection(); section = "menu"; navEl.style.display = "none";
+  grid.className = "menu-wrap";
+  prompt_.textContent = "O que queres fazer?";
+  grid.innerHTML = '<button class="bigbtn" id="bgames" style="background:var(--a)"><span class="bi">🎮</span>Jogos</button>'+
+                   '<button class="bigbtn" id="bstories" style="background:var(--d)"><span class="bi">📖</span>Histórias</button>';
+  document.getElementById("bgames").onclick = ()=>{ initAudio(); showGames(); };
+  document.getElementById("bstories").onclick = ()=>{ initAudio(); showStories(); };
+  if(say) speak(say);
+}
+function showGames(){ leaveSection(); section = "games"; navEl.style.display = ""; setMode(1); }
+document.getElementById("mh").onclick = ()=>{ initAudio(); showMenu("O que queres fazer?"); };
+
+const STORIES = [{
+  id:"barco", titulo:"O Barco do Sofá", capa:"⛵",
+  pages:[
+    {bg:"linear-gradient(#9fb4c7,#d3dde6)", e:["🌧️","🛋️","🧸"],
+     t:"Era uma tarde de chuva e a Benedita e a Mafalda estavam aborrecidas em casa. De repente, a Mafalda teve uma ideia: — E se o sofá fosse um barco?"},
+    {bg:"linear-gradient(#ffd6a5,#ffeccd)", e:["⛵","🛋️","🎒"],
+     t:"— Um barco! — gritou a Benedita. Foram buscar almofadas e um lençol para fazer a vela. — Todos a bordo! — disse a Mafalda."},
+    {bg:"linear-gradient(#9ad8ff,#4aa8e8)", e:["🌊","🐟","🐠"],
+     t:"O barco-sofá começou a navegar pelo mar de tapete azul. Splash, splash! Um peixinho saltou e acenou às duas capitãs."},
+    {bg:"linear-gradient(#bfe9ff,#ffe9a8)", e:["🏝️","🌴","☀️"],
+     t:"Ao longe, viram uma ilha com uma palmeira muito alta. — Terra à vista! — gritaram as duas."},
+    {bg:"linear-gradient(#a6e38f,#6cc76a)", e:["🦁","💤","🌴"],
+     t:"Na ilha, havia um leão enorme a dormir à sombra. — Ssshhh! — sussurrou a Benedita. — Não o vamos acordar."},
+    {bg:"linear-gradient(#a6e38f,#6cc76a)", e:["🦁","🍌","🍎"],
+     t:"Mas o leão abriu um olho e bocejou. — Tenho tanta fome! — A Mafalda tirou da mochila uma banana e a Benedita deu-lhe uma maçã."},
+    {bg:"linear-gradient(#ffb88c,#c58bd9)", e:["🎵","🦁","🌊","🎶"],
+     t:"O leão ficou tão contente que cantou com elas, e até as ondas dançaram ao som da música."},
+    {bg:"linear-gradient(#ffe0b2,#ffd1a1)", e:["🍲","🛋️","❤️"],
+     t:"— Meninas! O jantar está pronto! — chamou o papá. E o barco voltou a ser sofá. Mas a Benedita e a Mafalda ficaram com um segredo: com imaginação, qualquer sítio pode ser uma aventura. Fim."}
+  ]}];
+
+function showStories(){
+  leaveSection(); section = "stories"; navEl.style.display = "none";
+  grid.className = "menu-wrap";
+  prompt_.innerHTML = 'Escolhe uma história 📖 <button class="btn" id="hm">🏠 Menu</button>';
+  grid.innerHTML = STORIES.map((st,i)=>'<button class="bigbtn story" data-i="'+i+'" style="background:#f59f00"><span class="bi">'+st.capa+'</span>'+st.titulo+'</button>').join("");
+  Array.prototype.forEach.call(grid.querySelectorAll(".bigbtn"), b=>b.onclick = ()=>{ initAudio(); openStory(parseInt(b.dataset.i,10),0); });
+  document.getElementById("hm").onclick = ()=>{ initAudio(); showMenu("O que queres fazer?"); };
+  speak("Escolhe uma história!");
+}
+function openStory(si,pg){
+  leaveSection(); section = "stories";
+  const st = STORIES[si], P = st.pages[pg], last = pg===st.pages.length-1;
+  grid.className = "story-wrap";
+  prompt_.innerHTML = '<button class="btn" id="hm">🏠 Menu</button> <span class="pg">'+st.titulo+' · '+(pg+1)+'/'+st.pages.length+'</span>';
+  grid.innerHTML =
+    '<div class="story" style="background:'+P.bg+'">'+
+      '<div class="chars"><img src="benedita.jpg" alt="Benedita"><img class="m" src="mafalda.jpg" alt="Mafalda"></div>'+
+      '<div>'+P.e.map(x=>'<span class="sit">'+x+'</span>').join("")+'</div>'+
+      '<div class="stext">'+P.t+'</div>'+
+    '</div>'+
+    '<div class="sctl"><button class="btn" id="sp"'+(pg===0?' disabled':'')+'>◀</button>'+
+    '<button class="btn" id="sl">🔊 Ouvir</button>'+
+    '<button class="btn" id="sn">'+(last?'🔁 Ler outra vez':'Seguinte ▶')+'</button></div>';
+  const spoken = P.t.replace(/—\s*/g,"");
+  Array.prototype.forEach.call(grid.querySelectorAll(".sit"), e=>e.onclick = ()=>{
+    initAudio(); bounce(e);
+    voice({type:"sine",f:[[0,450+Math.random()*250],[.12,900]],dur:.16,vol:.25});
+  });
+  document.getElementById("hm").onclick = ()=>{ initAudio(); showMenu("O que queres fazer?"); };
+  document.getElementById("sl").onclick = ()=>{ initAudio(); speak(spoken); };
+  document.getElementById("sp").onclick = ()=>{ initAudio(); if(pg>0) openStory(si,pg-1); };
+  document.getElementById("sn").onclick = ()=>{ initAudio(); openStory(si, last?0:pg+1); };
+  if(last){ sfxWin(); confetti(); if(!st.done){ st.done = true; addStar(); } }
+  setTimeout(()=>speak(spoken),350);
+}
+
 function answer(el,a,next){
   if(locked) return;
   initAudio();
@@ -938,10 +1042,9 @@ function choosePlayer(id){
   document.getElementById("pName").textContent = "Eu sou a "+p.nome+"!";
   const btn = document.getElementById("player");
   btn.classList.remove("hi"); void btn.offsetWidth; btn.classList.add("hi");
-  loadStars(); drawStars(); huntStep = 0; countStep = 0; colorStep = 0;
+  loadStars(); drawStars(); huntStep = 0; countStep = 0; colorStep = 0; STORIES.forEach(x=>{ x.done = false; });
   sfxWin(); confetti();
-  setMode(1);
-  speak("Olá! Eu sou a "+p.nome+"! Vamos brincar com os animais!");
+  showMenu("Olá! Eu sou a "+p.nome+"! O que queres fazer? Jogos ou histórias?");
 }
 document.querySelectorAll(".who").forEach(b=>b.onclick = ()=>choosePlayer(b.dataset.p));
 /* tocar na foto em cima volta ao ecrã "Quem vai jogar?" */
@@ -958,7 +1061,7 @@ document.getElementById("credits").innerHTML = Object.entries(REAL).map(([id,r])
 }).join("");
 
 drawStars();
-setMode(1);   // a grelha fica por trás do ecrã "Quem vai jogar?" até alguém escolher
+showMenu();   // o menu fica por trás do ecrã "Quem vai jogar?" até alguém escolher
 </script>
 </body>
 </html>
