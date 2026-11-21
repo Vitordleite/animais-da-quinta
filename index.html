@@ -282,7 +282,7 @@ const REAL = {
   burro:   {t:"157763 felix-blume a-donkey-is-braying-in-his-enclosure-in-south-of-france.wav", u:"2/25/157763_felix-blume_a-donkey-is-braying-in-his-enclosure-in-south-of-france.wav/157763_felix-blume_a-donkey-is-braying-in-his-enclosure-in-south-of-france.wav.mp3", max:3.5, by:"felix-blume", lic:"CC0"},
   leao:    {t:"Lion raring-sound1TamilNadu178.ogg", u:"7/7d/Lion_raring-sound1TamilNadu178.ogg/Lion_raring-sound1TamilNadu178.ogg.mp3", max:4, by:"த*உழவன்", lic:"Domínio público"},
   elefante:{t:"Elephant voice - trumpeting.ogg",    u:"4/40/Elephant_voice_-_trumpeting.ogg/Elephant_voice_-_trumpeting.ogg.mp3", max:1.5, by:"தகவலுழவன்", lic:"CC0"},
-  macaco:  {t:"Capuchins.ogg",                      u:"5/59/Capuchins.ogg/Capuchins.ogg.mp3", max:3, by:"Peoute", lic:"CC BY 3.0"},
+  macaco:  {t:"Pant-hoot call made by a male chimpanzee.ogg", u:"5/56/Pant-hoot_call_made_by_a_male_chimpanzee.ogg/Pant-hoot_call_made_by_a_male_chimpanzee.ogg.mp3", max:3.5, by:"Pawel Fedurek et al.", lic:"CC BY 4.0"},
   ra:      {t:"Single Frog Croak.oga",              u:"9/9f/Single_Frog_Croak.oga/Single_Frog_Croak.oga.mp3", max:3, by:"MichaeltheFox8621", lic:"CC BY-SA 4.0"},
   passaro: {t:"Robin Redbreast singing 0302.oga",   u:"1/1f/Robin_Redbreast_singing_0302.oga/Robin_Redbreast_singing_0302.oga.mp3", max:1, by:"Amada44", lic:"CC BY-SA 3.0"},
   peru:    {t:"Gobbler.ogg",                        u:"1/11/Gobbler.ogg/Gobbler.ogg.mp3", max:3, by:"bod", lic:"Domínio público"},
@@ -352,17 +352,26 @@ const ANIMALS = [
 const byId = Object.fromEntries(ANIMALS.map(a=>[a.id,a]));
 
 /* ───────────────────────── FALA (pt-PT, se o dispositivo tiver voz) ───────────────────────── */
-function speak(text){
+let speakId = 0;
+/* Diz o texto e, SÓ QUANDO TERMINA, chama 'then' (ex.: tocar o som do animal).
+   Se a voz não existir ou falhar, 'then' é chamado na mesma, após um curto tempo. */
+function speak(text, then){
+  const id = ++speakId;
+  let done = false;
+  const fin = ()=>{ if(done) return; done = true; if(then && id===speakId) then(); };
   try{
-    if(!("speechSynthesis" in window)) return;
+    if(!("speechSynthesis" in window)){ setTimeout(fin,300); return; }
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "pt-PT"; u.rate = .85; u.pitch = 1.25;
     const v = speechSynthesis.getVoices().find(v=>/pt[-_]PT/i.test(v.lang)) ||
               speechSynthesis.getVoices().find(v=>/^pt/i.test(v.lang));
     if(v) u.voice = v;
+    u.onend = ()=>setTimeout(fin,150);
+    u.onerror = ()=>fin();
     speechSynthesis.speak(u);
-  }catch(e){}
+    setTimeout(fin, 4000);          // segurança (alguns aparelhos não avisam quando acaba)
+  }catch(e){ setTimeout(fin,300); }
 }
 if("speechSynthesis" in window) speechSynthesis.onvoiceschanged = ()=>{};
 
@@ -414,7 +423,8 @@ function mode1(){
   grid.innerHTML = "";
   ANIMALS.forEach(a=>{
     const c = card(a);
-    c.onclick = ()=>{ initAudio(); bounce(c); SOUNDS[a.s](); speak(a.n.replace(/^(O|A) /,"")); };
+    // primeiro o nome, depois o som (o ++ em speakId cancela o som pendente se tocarem noutro animal)
+    c.onclick = ()=>{ initAudio(); bounce(c); speak(a.n, ()=>{ bounce(c); SOUNDS[a.s](); }); };
     grid.appendChild(c);
   });
 }
@@ -456,10 +466,11 @@ function answer(el,a,next){
   if(a===target){
     locked = true;
     el.classList.add("good"); el.classList.remove("hide-name"); bounce(el);
-    sfxWin(); setTimeout(()=>SOUNDS[a.s](),500);
-    confetti(); addStar();
-    speak("Muito bem!");
-    setTimeout(next,2600);
+    sfxWin(); confetti(); addStar();
+    // "Muito bem!" + nome, e só depois o som do animal
+    setTimeout(()=>speak("Muito bem! "+a.n, ()=>SOUNDS[a.s]()), 500);
+    const m = mode;
+    setTimeout(()=>{ if(mode===m) next(); },6500);
   }else{
     shake(el); sfxOops();
     speak("Tenta outra vez!");
