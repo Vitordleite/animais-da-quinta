@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Os Animais da Quinta 🐮</title>
+<title>Jogos das Pequenitas 🐮</title>
 <style>
   :root{
     --bg1:#bfe9ff; --bg2:#e9fbd3; --card:#ffffff; --ink:#3a2f5b;
@@ -113,12 +113,14 @@
 
 <div id="start">
   <div class="big">🐮🐶🐱</div>
-  <h1>Os Animais da Quinta</h1>
+  <h1>Jogos das Pequenitas</h1>
+  <div style="font-size:clamp(20px,5vw,32px)">da Benedita e da Mafalda 💖</div>
   <button class="btn" id="go">▶ Jogar!</button>
 </div>
 
 <header>
-  <h1>🐮 Os Animais da Quinta 🐷</h1>
+  <h1>🐮 Jogos das Pequenitas 🐷</h1>
+  <div style="font-size:clamp(15px,3.4vw,20px);opacity:.75">Benedita e Mafalda · Os Animais da Quinta</div>
   <div class="stars" id="stars"></div>
 </header>
 
@@ -131,7 +133,7 @@
 <div class="prompt" id="prompt"></div>
 <main id="grid"></main>
 <footer>
-  Feito com ❤️ para a família<br>
+  Feito com ❤️ para a Benedita e a Mafalda<br>
   <details style="max-width:760px;margin:6px auto;text-align:left">
     <summary style="cursor:pointer;text-align:center">Créditos dos sons</summary>
     <p>Gravações do <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>, cortadas e com o volume ajustado. O coelho é um som sintetizado.</p>
@@ -603,7 +605,7 @@ document.getElementById("go").onclick = ()=>{
   initAudio();
   document.getElementById("start").remove();
   sfxWin();
-  speak("Olá! Vamos brincar com os animais!");
+  speak("Olá Benedita e Mafalda! Vamos brincar com os animais!");
 };
 
 document.getElementById("credits").innerHTML = Object.entries(REAL).map(([id,r])=>{
