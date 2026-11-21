@@ -18,21 +18,21 @@
     min-height:100vh; overflow-x:hidden;
   }
   header{text-align:center;padding:14px 10px 4px}
-  h1{margin:0;font-size:clamp(26px,6vw,46px);letter-spacing:1px}
-  .stars{font-size:clamp(20px,4vw,28px);min-height:34px}
+  h1{margin:0;font-size:36px;font-size:clamp(26px,6vw,46px);letter-spacing:1px}
+  .stars{font-size:24px;font-size:clamp(20px,4vw,28px);min-height:34px}
   nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:8px 10px}
   nav button, .btn{
-    font:inherit;font-size:clamp(16px,3.6vw,22px);font-weight:bold;
+    font:inherit;font-size:19px;font-size:clamp(16px,3.6vw,22px);font-weight:bold;
     border:none;border-radius:999px;padding:12px 22px;cursor:pointer;color:#fff;
     box-shadow:0 5px 0 rgba(0,0,0,.18);transition:transform .08s;
   }
   nav button:active,.btn:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
   #m1{background:var(--a)} #m2{background:var(--c)} #m3{background:var(--d)}
   nav button.on{outline:5px solid #fff;outline-offset:2px}
-  .prompt{text-align:center;font-size:clamp(20px,4.5vw,32px);margin:8px 10px;min-height:46px}
+  .prompt{text-align:center;font-size:26px;font-size:clamp(20px,4.5vw,32px);margin:8px 10px;min-height:46px}
   .prompt .btn{background:var(--b);color:var(--ink);margin-left:8px;padding:8px 18px}
   main{
-    display:grid;gap:14px;padding:10px 14px 30px;max-width:980px;margin:0 auto;
+    display:grid;grid-gap:14px;gap:14px;padding:10px 14px 30px;max-width:980px;margin:0 auto;
     grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
   }
   main.few{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));max-width:760px}
@@ -42,8 +42,8 @@
     transition:transform .1s;
   }
   .card:active{transform:scale(.94)}
-  .card .e{font-size:clamp(58px,15vw,96px);line-height:1.1;display:block}
-  .card .n{font-size:clamp(16px,3.6vw,22px);font-weight:bold}
+  .card .e{font-size:77px;font-size:clamp(58px,15vw,96px);line-height:1.1;display:block}
+  .card .n{font-size:19px;font-size:clamp(16px,3.6vw,22px);font-weight:bold}
   .card.hide-name .n{visibility:hidden}
   .bounce{animation:bounce .7s}
   @keyframes bounce{
@@ -63,7 +63,7 @@
   .ring{position:absolute;left:50%;top:42%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;
         border:5px solid var(--b);opacity:.8;pointer-events:none;animation:ring 1.1s ease-out forwards}
   @keyframes ring{to{transform:scale(5);opacity:0}}
-  .fx{position:fixed;z-index:15;pointer-events:none;font-size:clamp(22px,5vw,34px);transform:translate(-50%,-50%);
+  .fx{position:fixed;z-index:15;pointer-events:none;font-size:28px;font-size:clamp(22px,5vw,34px);transform:translate(-50%,-50%);
       animation:fx 1.5s ease-out forwards}
   @keyframes fx{from{opacity:1;transform:translate(-50%,-50%) scale(.6)}
                 to{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.3) rotate(var(--rot))}}
@@ -102,31 +102,34 @@
   @keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:.8}}
   footer{text-align:center;font-size:13px;opacity:.6;padding:0 0 18px}
   #start{
-    position:fixed;inset:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));z-index:20;
+    position:fixed;top:0;left:0;right:0;bottom:0;inset:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));z-index:20;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:20px;
   }
-  #start .ask{font-size:clamp(26px,7vw,44px);font-weight:bold}
-  .who-row{display:flex;gap:clamp(14px,5vw,40px);justify-content:center;flex-wrap:wrap}
+  #start .ask{font-size:35px;font-size:clamp(26px,7vw,44px);font-weight:bold}
+  .who-row .who{margin:8px}
+  nav button{margin:4px}
+  .player img{margin-right:6px}
+  .who-row{display:flex;gap:27px;gap:clamp(14px,5vw,40px);justify-content:center;flex-wrap:wrap}
   .who{font:inherit;border:none;background:#fff;border-radius:32px;padding:14px 14px 12px;cursor:pointer;
        box-shadow:0 8px 0 rgba(0,0,0,.15);display:flex;flex-direction:column;align-items:center;gap:8px;
-       font-size:clamp(22px,6vw,34px);font-weight:bold;color:var(--ink);transition:transform .1s}
+       font-size:28px;font-size:clamp(22px,6vw,34px);font-weight:bold;color:var(--ink);transition:transform .1s}
   .who:active{transform:translateY(5px) scale(.97);box-shadow:0 3px 0 rgba(0,0,0,.15)}
-  .who img{width:clamp(130px,34vw,220px);height:clamp(130px,34vw,220px);border-radius:50%;object-fit:cover;
+  .who img{width:175px;width:clamp(130px,34vw,220px);height:175px;height:clamp(130px,34vw,220px);border-radius:50%;object-fit:cover;
            border:6px solid var(--b);animation:bounce 2.4s infinite}
   .who:nth-child(2) img{border-color:var(--a);animation-delay:.6s}
   /* barra da jogadora, em cima */
   .player{font:inherit;color:var(--ink);background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:12px;padding:0}
-  .player img{width:clamp(64px,16vw,92px);height:clamp(64px,16vw,92px);border-radius:50%;object-fit:cover;border:5px solid var(--b);
+  .player img{width:78px;width:clamp(64px,16vw,92px);height:78px;height:clamp(64px,16vw,92px);border-radius:50%;object-fit:cover;border:5px solid var(--b);
               box-shadow:0 5px 0 rgba(0,0,0,.15)}
   .player .bubble{background:#fff;border-radius:22px;padding:8px 18px;text-align:left;box-shadow:0 5px 0 rgba(0,0,0,.12);
-                  font-size:clamp(18px,4.6vw,30px);line-height:1.15;position:relative}
+                  font-size:24px;font-size:clamp(18px,4.6vw,30px);line-height:1.15;position:relative}
   /* depois de entrar: cabeçalho compacto, foto + nome à esquerda */
   header{display:flex;align-items:center;gap:10px;text-align:left;padding:8px 12px 2px;max-width:980px;margin:0 auto}
-  header .sub{flex:1;text-align:center;font-size:clamp(13px,2.6vw,18px);opacity:.7}
-  header .stars{font-size:clamp(16px,3.4vw,22px);min-height:0;white-space:nowrap}
+  header .sub{flex:1;text-align:center;font-size:16px;font-size:clamp(13px,2.6vw,18px);opacity:.7}
+  header .stars{font-size:19px;font-size:clamp(16px,3.4vw,22px);min-height:0;white-space:nowrap}
   .player{gap:8px;flex:none}
-  .player img{width:clamp(44px,10vw,58px);height:clamp(44px,10vw,58px);border-width:3px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
-  .player .bubble{padding:5px 12px;border-radius:16px;font-size:clamp(13px,3.2vw,18px);box-shadow:0 3px 0 rgba(0,0,0,.12)}
+  .player img{width:51px;width:clamp(44px,10vw,58px);height:51px;height:clamp(44px,10vw,58px);border-width:3px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
+  .player .bubble{padding:5px 12px;border-radius:16px;font-size:16px;font-size:clamp(13px,3.2vw,18px);box-shadow:0 3px 0 rgba(0,0,0,.12)}
   header .player .bubble::before{left:-7px;margin-top:-7px;border-width:7px;border-left-width:0}
   @media (max-width:560px){header .sub{display:none}header{justify-content:space-between}}
   .player .bubble::before{content:"";position:absolute;left:-10px;top:50%;margin-top:-9px;border:9px solid transparent;border-right-color:#fff;border-left:0}
@@ -362,7 +365,7 @@ const REAL = {
   passaro: {t:"Robin Redbreast singing 0302.oga",   u:"1/1f/Robin_Redbreast_singing_0302.oga/Robin_Redbreast_singing_0302.oga.mp3", max:1, by:"Amada44", lic:"CC BY-SA 3.0"},
   peru:    {t:"Gobbler.ogg",                        u:"1/11/Gobbler.ogg/Gobbler.ogg.mp3", max:3, by:"bod", lic:"Domínio público"},
 };
-const SYNTH = {...SOUNDS};      // cópia dos sons sintetizados (reserva)
+const SYNTH = Object.assign({}, SOUNDS);      // cópia dos sons sintetizados (reserva)
 const REALBUF = {};
 let realStarted = false;
 
@@ -424,7 +427,7 @@ const ANIMALS = [
   {id:"peru",    e:"🦃", n:"O peru",     say:"O peru faz glu glu",      s:"peru"},
   {id:"coelho",  e:"🐰", n:"O coelho",   say:"O coelho gosta de cenouras",s:"coelho"},
 ];
-const byId = Object.fromEntries(ANIMALS.map(a=>[a.id,a]));
+const byId = {}; ANIMALS.forEach(a=>{ byId[a.id]=a; });
 
 /* ───────────────────────── FALA (pt-PT, se o dispositivo tiver voz) ───────────────────────── */
 let speakId = 0;
