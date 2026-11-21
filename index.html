@@ -27,7 +27,7 @@
     box-shadow:0 5px 0 rgba(0,0,0,.18);transition:transform .08s;
   }
   nav button:active,.btn:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
-  #m1{background:var(--a)} #m2{background:var(--c)} #m3{background:var(--d)} #m4{background:#a867d8} #m5{background:#1fa6b8}
+  #m1{background:var(--a)} #m2{background:var(--c)} #m3{background:var(--d)} #m4{background:#a867d8} #m5{background:#1fa6b8} #m6{background:#e0568a}
 
   /* ── jogo "Encontra-nos!" (estilo Onde está o Wally) ── */
   main.scene-wrap{display:block;max-width:980px}
@@ -66,6 +66,15 @@
          border:5px dashed var(--d);background:rgba(255,255,255,.6);padding:10px}
   .plate .cit{cursor:default}
   .big{font-size:56px;font-weight:bold;color:var(--d);margin:0 8px;vertical-align:middle}
+
+  /* ── jogo "As cores" ── */
+  main.color-wrap{display:block;max-width:760px}
+  .sw{width:110px;height:110px;margin:8px;border-radius:50%;border:6px solid #fff;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.2);transition:transform .1s}
+  .sw:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.2)}
+  .sw.good{animation:bounce .7s;outline:6px solid var(--b)}
+  .cobj{background:#fff;border-radius:26px;border:5px solid #fff;box-shadow:0 7px 0 rgba(0,0,0,.12);text-align:center;margin:0 auto 14px;padding:10px;max-width:320px}
+  .cobj .e2{font-size:96px;line-height:1.15}
+  .cobj .n2{font-size:26px;font-weight:bold}
   nav button.on{outline:5px solid #fff;outline-offset:2px}
   .prompt{text-align:center;font-size:26px;font-size:clamp(20px,4.5vw,32px);margin:8px 10px;min-height:46px}
   .prompt .btn{background:var(--b);color:var(--ink);margin-left:8px;padding:8px 18px}
@@ -200,6 +209,7 @@
   <button id="m3">🔎 Onde está?</button>
   <button id="m4">🕵️ Encontra-nos!</button>
   <button id="m5">🔢 Conta até 10</button>
+  <button id="m6">🎨 As cores</button>
 </nav>
 
 <div class="prompt" id="prompt"></div>
@@ -845,6 +855,55 @@ function mode5(){
   }
 }
 
+
+/* ───────────────────────── JOGO 6: AS CORES ───────────────────────── */
+const COLORS = [
+  {n:"vermelho",h:"#e53935"},{n:"amarelo",h:"#fdd835"},{n:"azul",h:"#1e88e5"},{n:"verde",h:"#43a047"},
+  {n:"laranja",h:"#fb8c00"},{n:"rosa",h:"#f48fb1"},{n:"roxo",h:"#8e24aa"},{n:"castanho",h:"#8d5a2b"}];
+const COLOR_THINGS = [
+  {e:"🍎",t:"a maçã",c:"vermelho"},{e:"🍅",t:"o tomate",c:"vermelho"},{e:"🍌",t:"a banana",c:"amarelo"},{e:"🌻",t:"o girassol",c:"amarelo"},
+  {e:"💧",t:"a gota de água",c:"azul"},{e:"🐸",t:"a rã",c:"verde"},{e:"🥦",t:"o brócolo",c:"verde"},{e:"🍊",t:"a laranja",c:"laranja"},
+  {e:"🥕",t:"a cenoura",c:"laranja"},{e:"🐷",t:"o porquinho",c:"rosa"},{e:"🍆",t:"a beringela",c:"roxo"},{e:"🐻",t:"o urso",c:"castanho"}];
+let colorStep = 0, colorLast = "";
+
+function mode6(){
+  const k = Math.min(8, 3 + Math.floor(colorStep/2));          // começa com 3 cores e vai juntando mais
+  const pool = COLORS.slice(0,k).map(c=>c.n);
+  const nOpts = Math.min(4, 2 + Math.ceil(k/3));
+  const mine = shuffle(COLOR_THINGS.filter(x=>pool.indexOf(x.c)>=0));
+  const kind = (colorStep%2===1 && mine.length) ? "obj" : "tap";
+  const hex = nm=>COLORS.filter(c=>c.n===nm)[0].h;
+  let tc, thing = null, done = false;
+  if(kind==="obj"){ thing = mine[0]; tc = thing.c; }
+  else{ do{ tc = pool[Math.floor(Math.random()*pool.length)]; }while(tc===colorLast && pool.length>1); colorLast = tc; }
+  const opts = [tc]; shuffle(pool.slice()).forEach(n=>{ if(opts.length<nOpts && opts.indexOf(n)<0) opts.push(n); });
+
+  grid.className = "color-wrap"; grid.innerHTML = "";
+  const ask = kind==="obj" ? "De que cor é "+thing.t+"?" : "Toca no "+tc+"!";
+  prompt_.innerHTML = (kind==="obj" ? "De que cor é "+thing.t+"?" : "Toca no <b style=\"color:"+(tc==="amarelo"?"#c9a400":hex(tc))+"\">"+tc+"</b>!")+' <button class="btn" id="again">🔊</button>';
+  if(kind==="obj"){
+    const o = document.createElement("div"); o.className = "cobj";
+    o.innerHTML = '<div class="e2">'+thing.e+'</div><div class="n2">'+thing.t.charAt(0).toUpperCase()+thing.t.slice(1)+'</div>';
+    grid.appendChild(o);
+  }
+  const ch = document.createElement("div"); ch.className = "choices"; grid.appendChild(ch);
+  shuffle(opts).forEach(nm=>{
+    const b = document.createElement("div"); b.className = "sw"; b.style.background = hex(nm);
+    b.setAttribute("role","button"); b.setAttribute("aria-label",nm);
+    b.onclick = ()=>{
+      if(done) return; initAudio();
+      if(nm===tc){
+        done = true; b.classList.add("good"); sfxWin(); confetti(); addStar();
+        speak("Muito bem! É "+tc+"!");
+        setTimeout(()=>{ if(mode===6){ colorStep++; mode6(); } }, 4000);
+      }else{ shake(b); sfxOops(); speak("Isso é "+nm+". Tenta outra vez!"); }
+    };
+    ch.appendChild(b);
+  });
+  document.getElementById("again").onclick = ()=>{ initAudio(); speak(ask); };
+  setTimeout(()=>{ if(mode===6 && !done) speak(ask); },350);
+}
+
 function answer(el,a,next){
   if(locked) return;
   initAudio();
@@ -864,10 +923,10 @@ function answer(el,a,next){
 
 function setMode(m){
   mode = m;
-  ["m1","m2","m3","m4","m5"].forEach((id,i)=>document.getElementById(id).classList.toggle("on",i+1===m));
-  ({1:mode1,2:mode2,3:mode3,4:mode4,5:mode5})[m]();
+  ["m1","m2","m3","m4","m5","m6"].forEach((id,i)=>document.getElementById(id).classList.toggle("on",i+1===m));
+  ({1:mode1,2:mode2,3:mode3,4:mode4,5:mode5,6:mode6})[m]();
 }
-["m1","m2","m3","m4","m5"].forEach((id,i)=>document.getElementById(id).onclick = ()=>{ initAudio(); setMode(i+1); });
+["m1","m2","m3","m4","m5","m6"].forEach((id,i)=>document.getElementById(id).onclick = ()=>{ initAudio(); setMode(i+1); });
 
 /* Escolher quem joga: mostra a foto em cima com "Olá! Eu sou a ..." e a voz diz o mesmo */
 function choosePlayer(id){
@@ -879,7 +938,7 @@ function choosePlayer(id){
   document.getElementById("pName").textContent = "Eu sou a "+p.nome+"!";
   const btn = document.getElementById("player");
   btn.classList.remove("hi"); void btn.offsetWidth; btn.classList.add("hi");
-  loadStars(); drawStars(); huntStep = 0; countStep = 0;
+  loadStars(); drawStars(); huntStep = 0; countStep = 0; colorStep = 0;
   sfxWin(); confetti();
   setMode(1);
   speak("Olá! Eu sou a "+p.nome+"! Vamos brincar com os animais!");
