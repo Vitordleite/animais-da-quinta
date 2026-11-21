@@ -120,6 +120,15 @@
               box-shadow:0 5px 0 rgba(0,0,0,.15)}
   .player .bubble{background:#fff;border-radius:22px;padding:8px 18px;text-align:left;box-shadow:0 5px 0 rgba(0,0,0,.12);
                   font-size:clamp(18px,4.6vw,30px);line-height:1.15;position:relative}
+  /* depois de entrar: cabeçalho compacto, foto + nome à esquerda */
+  header{display:flex;align-items:center;gap:10px;text-align:left;padding:8px 12px 2px;max-width:980px;margin:0 auto}
+  header .sub{flex:1;text-align:center;font-size:clamp(13px,2.6vw,18px);opacity:.7}
+  header .stars{font-size:clamp(16px,3.4vw,22px);min-height:0;white-space:nowrap}
+  .player{gap:8px;flex:none}
+  .player img{width:clamp(44px,10vw,58px);height:clamp(44px,10vw,58px);border-width:3px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
+  .player .bubble{padding:5px 12px;border-radius:16px;font-size:clamp(13px,3.2vw,18px);box-shadow:0 3px 0 rgba(0,0,0,.12)}
+  header .player .bubble::before{left:-7px;margin-top:-7px;border-width:7px;border-left-width:0}
+  @media (max-width:560px){header .sub{display:none}header{justify-content:space-between}}
   .player .bubble::before{content:"";position:absolute;left:-10px;top:50%;margin-top:-9px;border:9px solid transparent;border-right-color:#fff;border-left:0}
   .player.hi img{animation:bounce .9s 2}
 </style>
@@ -138,9 +147,9 @@
 <header>
   <button id="player" class="player" title="Trocar de jogadora">
     <img id="pPhoto" alt="">
-    <span class="bubble"><b id="pHi">Olá!</b><br><span id="pName"></span></span>
+    <span class="bubble"><b id="pHi">Olá!</b> <span id="pName"></span></span>
   </button>
-  <div style="font-size:clamp(15px,3.4vw,20px);opacity:.75;margin-top:2px">Jogos das Pequenitas · Os Animais da Quinta</div>
+  <div class="sub">Jogos das Pequenitas · Os Animais da Quinta</div>
   <div class="stars" id="stars"></div>
 </header>
 
