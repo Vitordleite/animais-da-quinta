@@ -86,7 +86,14 @@
 
 <div class="prompt" id="prompt"></div>
 <main id="grid"></main>
-<footer>Feito com ❤️ para a família</footer>
+<footer>
+  Feito com ❤️ para a família<br>
+  <details style="max-width:760px;margin:6px auto;text-align:left">
+    <summary style="cursor:pointer;text-align:center">Créditos dos sons</summary>
+    <p>Gravações do <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>, cortadas e com o volume ajustado. O coelho é um som sintetizado.</p>
+    <ul id="credits"></ul>
+  </details>
+</footer>
 
 <script>
 "use strict";
@@ -99,6 +106,7 @@ function initAudio(){
   master = AC.createGain(); master.gain.value = 0.8;
   const comp = AC.createDynamicsCompressor();
   master.connect(comp); comp.connect(AC.destination);
+  if(typeof loadReal==="function") loadReal();
 }
 
 /* oscilador com envolvente de frequência [[t,hz],...], filtro e vibrato */
@@ -258,6 +266,70 @@ function sfxOops(){
   voice({type:"sine",f:[[0,300],[.25,200]],dur:.28,vol:.25});
 }
 
+/* ───────────────────────── GRAVAÇÕES REAIS (Wikimedia Commons) ─────────────────────────
+   Cada som é descarregado uma vez (MP3, toca em qualquer aparelho), cortado na parte mais
+   forte e normalizado em volume. Se não houver internet, usa-se o som sintetizado acima. */
+const W = "https://upload.wikimedia.org/wikipedia/commons/transcoded/";
+const REAL = {
+  vaca:    {t:"Single Cow Moo.ogg",                 u:"a/a5/Single_Cow_Moo.ogg/Single_Cow_Moo.ogg.mp3", max:3.8, by:"MichaeltheFox8621", lic:"CC BY-SA 4.0"},
+  cao:     {t:"Barking of a dog.ogg",               u:"a/a2/Barking_of_a_dog.ogg/Barking_of_a_dog.ogg.mp3", max:2.6, by:"Amada44", lic:"CC BY-SA 3.0"},
+  gato:    {t:"Meow of a Siamese cat - freemaster2.wav", u:"8/81/Meow_of_a_Siamese_cat_-_freemaster2.wav/Meow_of_a_Siamese_cat_-_freemaster2.wav.mp3", max:1.6, by:"freemaster2", lic:"CC0"},
+  ovelha:  {t:"Sheep bleating.ogg",                 u:"1/13/Sheep_bleating.ogg/Sheep_bleating.ogg.mp3", max:3, by:"earthcalling", lic:"Domínio público"},
+  porco:   {t:"Pig grunt - Erdie.ogg",              u:"a/ac/Pig_grunt_-_Erdie.ogg/Pig_grunt_-_Erdie.ogg.mp3", max:.8, rep:2, by:"erdie", lic:"CC BY 3.0"},
+  galo:    {t:"Rooster crowing.ogg",                u:"c/c5/Rooster_crowing.ogg/Rooster_crowing.ogg.mp3", max:3.9, by:"Filo gèn'", lic:"CC BY-SA 4.0"},
+  pato:    {t:"Mudchute duck 2.ogg",                u:"f/f3/Mudchute_duck_2.ogg/Mudchute_duck_2.ogg.mp3", max:1.5, by:"Secretlondon", lic:"CC BY-SA 3.0"},
+  cavalo:  {t:"Wiehern.ogg",                        u:"d/db/Wiehern.ogg/Wiehern.ogg.mp3", max:2.3, by:"Hü.", lic:"Domínio público"},
+  burro:   {t:"157763 felix-blume a-donkey-is-braying-in-his-enclosure-in-south-of-france.wav", u:"2/25/157763_felix-blume_a-donkey-is-braying-in-his-enclosure-in-south-of-france.wav/157763_felix-blume_a-donkey-is-braying-in-his-enclosure-in-south-of-france.wav.mp3", max:3.5, by:"felix-blume", lic:"CC0"},
+  leao:    {t:"Lion raring-sound1TamilNadu178.ogg", u:"7/7d/Lion_raring-sound1TamilNadu178.ogg/Lion_raring-sound1TamilNadu178.ogg.mp3", max:4, by:"த*உழவன்", lic:"Domínio público"},
+  elefante:{t:"Elephant voice - trumpeting.ogg",    u:"4/40/Elephant_voice_-_trumpeting.ogg/Elephant_voice_-_trumpeting.ogg.mp3", max:1.5, by:"தகவலுழவன்", lic:"CC0"},
+  macaco:  {t:"Capuchins.ogg",                      u:"5/59/Capuchins.ogg/Capuchins.ogg.mp3", max:3, by:"Peoute", lic:"CC BY 3.0"},
+  ra:      {t:"Single Frog Croak.oga",              u:"9/9f/Single_Frog_Croak.oga/Single_Frog_Croak.oga.mp3", max:3, by:"MichaeltheFox8621", lic:"CC BY-SA 4.0"},
+  passaro: {t:"Robin Redbreast singing 0302.oga",   u:"1/1f/Robin_Redbreast_singing_0302.oga/Robin_Redbreast_singing_0302.oga.mp3", max:1, by:"Amada44", lic:"CC BY-SA 3.0"},
+  peru:    {t:"Gobbler.ogg",                        u:"1/11/Gobbler.ogg/Gobbler.ogg.mp3", max:3, by:"bod", lic:"Domínio público"},
+};
+const SYNTH = {...SOUNDS};      // cópia dos sons sintetizados (reserva)
+const REALBUF = {};
+let realStarted = false;
+
+function decode(ab){
+  return new Promise((ok,fail)=>{ const p = AC.decodeAudioData(ab,ok,fail); if(p&&p.catch) p.catch(fail); });
+}
+/* escolhe a janela mais forte de 'max' segundos e normaliza o volume */
+function prepare(buf,max){
+  const sr = buf.sampleRate, d = buf.getChannelData(0), n = d.length;
+  const win = Math.min(n, Math.round(max*sr)), blk = Math.round(sr*.05);
+  const e = []; for(let i=0;i<n;i+=blk){ let s=0; const end=Math.min(n,i+blk); for(let j=i;j<end;j++) s+=d[j]*d[j]; e.push(s); }
+  const wb = Math.max(1,Math.round(win/blk)); let best=0, bestS=-1, cur=0;
+  for(let i=0;i<e.length;i++){ cur+=e[i]; if(i>=wb) cur-=e[i-wb]; if(i>=wb-1 && cur>bestS){ bestS=cur; best=i-wb+1; } }
+  let start = Math.max(0,best*blk); if(start+win>n) start=Math.max(0,n-win);
+  let pk=0; for(let j=start;j<start+win;j++){ const a=Math.abs(d[j]); if(a>pk) pk=a; }
+  return {buf, start:start/sr, dur:win/sr, gain: pk>0 ? Math.min(6,.9/pk) : 1};
+}
+async function loadReal(){
+  if(realStarted) return; realStarted = true;
+  await Promise.all(Object.entries(REAL).map(async ([id,r])=>{
+    try{
+      const resp = await fetch(W+r.u); if(!resp.ok) return;
+      REALBUF[id] = prepare(await decode(await resp.arrayBuffer()), r.max);
+    }catch(e){ /* sem internet: fica o som sintetizado */ }
+  }));
+}
+function playReal(id){
+  const r = REALBUF[id], c = REAL[id], reps = c.rep||1;
+  for(let k=0;k<reps;k++){
+    const t0 = AC.currentTime + k*(r.dur+.2);
+    const s = AC.createBufferSource(); s.buffer = r.buf;
+    const g = AC.createGain(), fi=.03, fo=Math.min(.25,r.dur/3);
+    g.gain.setValueAtTime(0,t0);
+    g.gain.linearRampToValueAtTime(r.gain,t0+fi);
+    g.gain.setValueAtTime(r.gain,t0+r.dur-fo);
+    g.gain.linearRampToValueAtTime(0,t0+r.dur);
+    s.connect(g); g.connect(master);
+    s.start(t0,r.start,r.dur);
+  }
+}
+Object.keys(REAL).forEach(id=>{ SOUNDS[id] = ()=> REALBUF[id] ? playReal(id) : SYNTH[id](); });
+
 /* ───────────────────────── DADOS ───────────────────────── */
 const ANIMALS = [
   {id:"vaca",    e:"🐮", n:"A vaca",     say:"A vaca faz muuu",         s:"vaca"},
@@ -407,6 +479,12 @@ document.getElementById("go").onclick = ()=>{
   sfxWin();
   speak("Olá! Vamos brincar com os animais!");
 };
+
+document.getElementById("credits").innerHTML = Object.entries(REAL).map(([id,r])=>{
+  const a = byId[id];
+  const link = "https://commons.wikimedia.org/wiki/File:"+encodeURIComponent(r.t.replace(/ /g,"_"));
+  return `<li>${a.e} <a href="${link}" target="_blank" rel="noopener">${r.t.replace(/</g,"&lt;")}</a> — ${r.by.replace(/</g,"&lt;")}, ${r.lic}</li>`;
+}).join("");
 
 drawStars();
 setMode(1);
