@@ -12,6 +12,6 @@ Jogos e histórias para a Benedita e a Mafalda, em português de Portugal. Corre
 
 ## 📖 Histórias
 - ⛵ **O Barco do Sofá** – uma aventura de faz-de-conta com a Benedita e a Mafalda, narrada em voz alta
-- 🌙 **A Estrelinha Sonolenta** – história calma para adormecer, com voz mais lenta e sem festa no fim
+- 🌙 **A Estrelinha Sonolenta** – história calma para adormecer, com ilustrações em aguarela, voz mais lenta e sem festa no fim (ilustrações geradas com IA, na pasta `ilustracoes/`)
 
 Os sons dos animais são gravações da Wikimedia Commons (créditos no fim da página). A voz vem do próprio aparelho.

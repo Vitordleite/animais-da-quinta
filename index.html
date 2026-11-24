@@ -94,6 +94,7 @@
   .sit:nth-child(2){animation-delay:.5s} .sit:nth-child(3){animation-delay:1s} .sit:nth-child(4){animation-delay:1.5s}
   .sit.bounce{animation:bounce .7s}
   @keyframes sway{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-9px) rotate(2deg)}}
+  .ill{display:block;width:100%;max-width:560px;height:auto;margin:10px auto 0;border-radius:20px;border:4px solid #fff;box-shadow:0 4px 0 rgba(0,0,0,.12)}
   .stext{background:rgba(255,255,255,.92);border-radius:22px;margin:12px 6px 0;padding:14px 16px;font-size:22px;font-size:clamp(19px,4.6vw,28px);line-height:1.45;text-align:left}
   .sctl{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:14px}
   .sctl .btn{background:var(--d);color:#fff}
@@ -1031,25 +1032,25 @@ const STORIES = [{
   ,{
   id:"estrelinha", titulo:"A Estrelinha Sonolenta", capa:"🌙", calm:true,
   pages:[
-    {bg:"linear-gradient(#3b4a8c,#6b7fc4)", e:["🌙","⭐","🧸"],
+    {bg:"linear-gradient(#3b4a8c,#6b7fc4)", img:"ilustracoes/estrelinha-1.jpg", e:["🌙","⭐","🧸"],
      t:"Já era noite. A Benedita e a Mafalda estavam na caminha, de pijama, com os peluches ao lado. Lá fora, o céu estava cheio de estrelinhas a piscar."},
-    {bg:"linear-gradient(#3b4a8c,#6b7fc4)", e:["⭐","🪟","✨"],
+    {bg:"linear-gradient(#3b4a8c,#6b7fc4)", img:"ilustracoes/estrelinha-2.jpg", e:["⭐","🪟","✨"],
      t:"De repente, uma estrelinha muito pequenina desceu devagarinho e pousou na janela. — Olá, meninas — disse ela, baixinho. — Não consigo adormecer. Podem ajudar-me?"},
-    {bg:"linear-gradient(#4a5a9e,#8a9ad6)", e:["🤝","⭐","👣"],
+    {bg:"linear-gradient(#4a5a9e,#8a9ad6)", img:"ilustracoes/estrelinha-3.jpg", e:["🤝","⭐","👣"],
      t:"— Claro que sim — sussurrou a Benedita. — Vamos procurar a tua caminha — disse a Mafalda. Deram a mão à estrelinha e saíram na ponta dos pés."},
-    {bg:"linear-gradient(#3d6b6b,#7fb5a0)", e:["🌷","🌼","🌿"],
+    {bg:"linear-gradient(#3d6b6b,#7fb5a0)", img:"ilustracoes/estrelinha-4.jpg", e:["🌷","🌼","🌿"],
      t:"Primeiro, passaram pelo jardim. As flores já tinham fechado as pétalas para dormir. — Boa noite, flores — disseram elas, bem baixinho."},
-    {bg:"linear-gradient(#4a4a7a,#8a7fb8)", e:["🦉","🌳","🌙"],
+    {bg:"linear-gradient(#4a4a7a,#8a7fb8)", img:"ilustracoes/estrelinha-5.jpg", e:["🦉","🌳","🌙"],
      t:"No ramo de uma árvore, estava uma coruja de olhos grandes. — Uuh, uuh. Para adormecer, é preciso respirar bem devagar — disse ela. — Vamos todas fazer três respirações grandes."},
-    {bg:"linear-gradient(#4a4a7a,#8a7fb8)", e:["😌","💨","⭐"],
+    {bg:"linear-gradient(#4a4a7a,#8a7fb8)", img:"ilustracoes/estrelinha-6.jpg", e:["😌","💨","⭐"],
      t:"Respiraram fundo, como se cheirassem uma flor. E sopraram devagarinho, como se apagassem uma vela. Uma vez. Duas vezes. Três vezes. A estrelinha já tinha os olhinhos pesados."},
-    {bg:"linear-gradient(#5a5a8a,#9a8fc4)", e:["🐰","🐱","💤"],
+    {bg:"linear-gradient(#5a5a8a,#9a8fc4)", img:"ilustracoes/estrelinha-7.jpg", e:["🐰","🐱","💤"],
      t:"Seguiram caminho. O coelhinho dormia enroscado na toca, e o gatinho dormia enroscado no cesto. Tudo no mundo estava a descansar."},
-    {bg:"linear-gradient(#6a6fa8,#b8b0e0)", e:["🌙","☁️","⭐"],
+    {bg:"linear-gradient(#6a6fa8,#b8b0e0)", img:"ilustracoes/estrelinha-8.jpg", e:["🌙","☁️","⭐"],
      t:"No alto do céu, a Lua sorriu para elas. — Trouxeram a minha estrelinha! Tenho aqui uma nuvem fofinha, quentinha e macia, só para ela."},
-    {bg:"linear-gradient(#6a6fa8,#b8b0e0)", e:["☁️","⭐","💤"],
+    {bg:"linear-gradient(#6a6fa8,#b8b0e0)", img:"ilustracoes/estrelinha-9.jpg", e:["☁️","⭐","💤"],
      t:"A estrelinha deitou-se na nuvem e bocejou um grande bocejo. — Obrigada, meninas — murmurou. — Boa noite. E a luzinha dela foi ficando suave, suave, suave... até adormecer."},
-    {bg:"linear-gradient(#2b3470,#4a5a9e)", e:["🛏️","🌙","💤","⭐"],
+    {bg:"linear-gradient(#2b3470,#4a5a9e)", img:"ilustracoes/estrelinha-10.jpg", e:["🛏️","🌙","💤","⭐"],
      t:"A Benedita e a Mafalda voltaram para casa, na ponta dos pés, e deitaram-se na caminha. Fecharam os olhinhos e sentiram o corpo todo leve, leve, leve. E sonharam com estrelinhas a brilhar. Boa noite, Benedita. Boa noite, Mafalda. Fim."}
   ]}
 ];
@@ -1071,7 +1072,7 @@ function openStory(si,pg){
   grid.innerHTML =
     '<div class="story" style="background:'+P.bg+'">'+
       '<div class="chars"><img src="benedita.jpg" alt="Benedita"><img class="m" src="mafalda.jpg" alt="Mafalda"></div>'+
-      '<div>'+P.e.map(x=>'<span class="sit">'+x+'</span>').join("")+'</div>'+
+      (P.img ? '<img class="ill" src="'+P.img+'" alt="">' : '<div>'+P.e.map(x=>'<span class="sit">'+x+'</span>').join("")+'</div>')+
       '<div class="stext">'+P.t+'</div>'+
     '</div>'+
     '<div class="sctl"><button class="btn" id="sp"'+(pg===0?' disabled':'')+'>◀</button>'+
