@@ -514,7 +514,7 @@ function ptVoices(){
   try{ all = speechSynthesis.getVoices() || []; }catch(e){}
   const seen = {}, out = [];
   all.forEach(v=>{
-    if(!/^pt/i.test(v.lang) || seen[v.name]) return;
+    if(!/^pt/i.test(v.lang) || /pt[-_]BR/i.test(v.lang) || seen[v.name]) return; /* nunca vozes do Brasil */
     seen[v.name] = 1;
     let sc = /pt[-_]PT/i.test(v.lang) ? 100 : 20;
     if(/premium|enhanced|melhorad|natural|neural|online/i.test(v.name)) sc += 30;
