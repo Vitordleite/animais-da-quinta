@@ -557,7 +557,7 @@ function speak(text, then, o){
 }
 /* Leitura de histórias: frases separadas, pausas, e as falas (entre travessões) com voz um pouco mais viva */
 let narrTok = 0;
-function narrate(raw){
+function narrate(raw, calm){
   const tok = ++narrTok;
   const txt = raw.replace(/Ssshhh/g,"Chiu").replace(/Splash, splash/g,"Chape, chape");
   const segs = [];
@@ -565,7 +565,7 @@ function narrate(raw){
   (function next(k){
     if(tok!==narrTok || k>=segs.length) return;
     const sg = segs[k];
-    speak(sg.t, ()=>setTimeout(()=>next(k+1), sg.d?200:380), sg.d ? {pitch:1.22,rate:.92} : {pitch:1.0,rate:.84});
+    speak(sg.t, ()=>setTimeout(()=>next(k+1), calm?(sg.d?450:800):(sg.d?200:380)), calm ? (sg.d ? {pitch:1.08,rate:.78} : {pitch:.95,rate:.7}) : (sg.d ? {pitch:1.22,rate:.92} : {pitch:1.0,rate:.84}));
   })(0);
 }
 if("speechSynthesis" in window) speechSynthesis.onvoiceschanged = ()=>{ if(typeof refreshVoiceBtn==="function") refreshVoiceBtn(); };
@@ -1027,7 +1027,32 @@ const STORIES = [{
      t:"O leão ficou tão contente que cantou com elas, e até as ondas dançaram ao som da música."},
     {bg:"linear-gradient(#ffe0b2,#ffd1a1)", e:["🍲","🛋️","❤️"],
      t:"— Meninas! O jantar está pronto! — chamou o papá. E o barco voltou a ser sofá. Mas a Benedita e a Mafalda ficaram com um segredo: com imaginação, qualquer sítio pode ser uma aventura. Fim."}
-  ]}];
+  ]}
+  ,{
+  id:"estrelinha", titulo:"A Estrelinha Sonolenta", capa:"🌙", calm:true,
+  pages:[
+    {bg:"linear-gradient(#3b4a8c,#6b7fc4)", e:["🌙","⭐","🧸"],
+     t:"Já era noite. A Benedita e a Mafalda estavam na caminha, de pijama, com os peluches ao lado. Lá fora, o céu estava cheio de estrelinhas a piscar."},
+    {bg:"linear-gradient(#3b4a8c,#6b7fc4)", e:["⭐","🪟","✨"],
+     t:"De repente, uma estrelinha muito pequenina desceu devagarinho e pousou na janela. — Olá, meninas — disse ela, baixinho. — Não consigo adormecer. Podem ajudar-me?"},
+    {bg:"linear-gradient(#4a5a9e,#8a9ad6)", e:["🤝","⭐","👣"],
+     t:"— Claro que sim — sussurrou a Benedita. — Vamos procurar a tua caminha — disse a Mafalda. Deram a mão à estrelinha e saíram na ponta dos pés."},
+    {bg:"linear-gradient(#3d6b6b,#7fb5a0)", e:["🌷","🌼","🌿"],
+     t:"Primeiro, passaram pelo jardim. As flores já tinham fechado as pétalas para dormir. — Boa noite, flores — disseram elas, bem baixinho."},
+    {bg:"linear-gradient(#4a4a7a,#8a7fb8)", e:["🦉","🌳","🌙"],
+     t:"No ramo de uma árvore, estava uma coruja de olhos grandes. — Uuh, uuh. Para adormecer, é preciso respirar bem devagar — disse ela. — Vamos todas fazer três respirações grandes."},
+    {bg:"linear-gradient(#4a4a7a,#8a7fb8)", e:["😌","💨","⭐"],
+     t:"Respiraram fundo, como se cheirassem uma flor. E sopraram devagarinho, como se apagassem uma vela. Uma vez. Duas vezes. Três vezes. A estrelinha já tinha os olhinhos pesados."},
+    {bg:"linear-gradient(#5a5a8a,#9a8fc4)", e:["🐰","🐱","💤"],
+     t:"Seguiram caminho. O coelhinho dormia enroscado na toca, e o gatinho dormia enroscado no cesto. Tudo no mundo estava a descansar."},
+    {bg:"linear-gradient(#6a6fa8,#b8b0e0)", e:["🌙","☁️","⭐"],
+     t:"No alto do céu, a Lua sorriu para elas. — Trouxeram a minha estrelinha! Tenho aqui uma nuvem fofinha, quentinha e macia, só para ela."},
+    {bg:"linear-gradient(#6a6fa8,#b8b0e0)", e:["☁️","⭐","💤"],
+     t:"A estrelinha deitou-se na nuvem e bocejou um grande bocejo. — Obrigada, meninas — murmurou. — Boa noite. E a luzinha dela foi ficando suave, suave, suave... até adormecer."},
+    {bg:"linear-gradient(#2b3470,#4a5a9e)", e:["🛏️","🌙","💤","⭐"],
+     t:"A Benedita e a Mafalda voltaram para casa, na ponta dos pés, e deitaram-se na caminha. Fecharam os olhinhos e sentiram o corpo todo leve, leve, leve. E sonharam com estrelinhas a brilhar. Boa noite, Benedita. Boa noite, Mafalda. Fim."}
+  ]}
+];
 
 function showStories(){
   leaveSection(); section = "stories"; navEl.style.display = "none";
@@ -1057,12 +1082,12 @@ function openStory(si,pg){
     voice({type:"sine",f:[[0,450+Math.random()*250],[.12,900]],dur:.16,vol:.25});
   });
   document.getElementById("hm").onclick = ()=>{ initAudio(); showMenu("O que queres fazer?"); };
-  document.getElementById("sl").onclick = ()=>{ initAudio(); narrate(P.t); };
+  document.getElementById("sl").onclick = ()=>{ initAudio(); narrate(P.t, st.calm); };
   document.getElementById("sp").onclick = ()=>{ initAudio(); if(pg>0) openStory(si,pg-1); };
   document.getElementById("sn").onclick = ()=>{ initAudio(); openStory(si, last?0:pg+1); };
-  if(last){ sfxWin(); confetti(); if(!st.done){ st.done = true; addStar(); } }
+  if(last){ if(!st.calm){ sfxWin(); confetti(); } if(!st.done){ st.done = true; addStar(); } }
   const myTok = narrTok;
-  setTimeout(()=>{ if(narrTok===myTok && section==="stories") narrate(P.t); },350);
+  setTimeout(()=>{ if(narrTok===myTok && section==="stories") narrate(P.t, st.calm); },350);
 }
 
 function answer(el,a,next){
